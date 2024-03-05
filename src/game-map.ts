@@ -1,8 +1,10 @@
 import * as ROT from "rot-js";
 import { Engine } from "./engine";
 import Digger from "rot-js/lib/map/digger";
-import { Entity, spawnPlayer } from "./entity";
+import { Actor, Entity, spawnMap, spawnPlayer } from "./entity";
 import { FLOOR_TILE, Tile, WALL_TILE } from "./tile-types";
+import { ENEMIES_CHANCES, MAX_ENEMIES_BY_LEVEL, generateRandomNumber, getMaxValueForLevel, getWeights } from "./rng";
+import { Room } from "rot-js/lib/map/features";
 
 type Door = {
     x: number
@@ -38,6 +40,11 @@ export class GameMap {
         return this
     }
 
+    public get actors(): Actor[] {
+        return this.entities.filter((en) => en instanceof Actor)
+            .map((en) => en as Actor)
+    }
+
     drawDoor(x: number, y: number) {
         this.display.draw(x, y, '|', '#0070ff', '#000')
     }
@@ -69,25 +76,46 @@ export class GameMap {
         }
     }
 
+    placeEntities(room: Room, level: number) {
+        const numberOfEnemiesToAdd = generateRandomNumber(0, getMaxValueForLevel(MAX_ENEMIES_BY_LEVEL, level))
+        for (let i = 0; i < numberOfEnemiesToAdd; i++) {
+            const x = generateRandomNumber(room.getLeft() + 1, room.getRight() - 1);
+            const y = generateRandomNumber(room.getTop(), room.getBottom() - 1);
+
+            if (!this.entities.some((e) => e.x == x && e.y == y)) {
+                const weights = getWeights(ENEMIES_CHANCES, level);
+                const spawnType = ROT.RNG.getWeightedValue(weights);
+                if (spawnType) {
+                    spawnMap[spawnType](this, x, y);
+                }
+            }
+        }
+    }
+
     initMap() {
         for (let i = 0; i < Engine.MAP_WIDTH * Engine.MAP_HEIGHT; i++) {
-            this.tiles[i] = WALL_TILE
+            this.tiles[i] = { ...WALL_TILE }
         }
         this.map.create()
         this.initDoors();
         this.initCorridors()
 
+        let roomNumber = 0
         for (let room of this.map.getRooms()) {
             for (let y = room.getTop(); y <= room.getBottom(); y++) {
                 for (let x = room.getLeft(); x <= room.getRight(); x++) {
-                    this.tiles[y * Engine.MAP_WIDTH + x] = FLOOR_TILE
+                    this.tiles[y * Engine.MAP_WIDTH + x] = { ...FLOOR_TILE }
                     //this.display.draw(x, y, '', '#fff', '#000')
                 }
             }
+            if (roomNumber > 0) {
+                this.placeEntities(room, 1)
+            }
+            roomNumber++
         }
 
         for (let corridor of GameMap.corridors) {
-            this.tiles[corridor.y * Engine.MAP_WIDTH + corridor.x] = FLOOR_TILE
+            this.tiles[corridor.y * Engine.MAP_WIDTH + corridor.x] = { ...FLOOR_TILE }
             //this.display.draw(corridor.x, corridor.y, 'c', '#fff', '#000')
         }
 
@@ -114,7 +142,7 @@ export class GameMap {
 
         for (const en of sortedEntities) {
             if (this.tileIsVisible(en.x, en.y)) {
-                this.display.draw(en.x, en.y, en.char, en.fg, en.bg)
+                this.drawEntity(en)
             }
         }
     }
@@ -127,6 +155,31 @@ export class GameMap {
         const idx = this.entities.indexOf(en)
         if (idx >= 0) {
             this.entities.splice(idx, 1)
+        }
+    }
+
+    public getBlockingEntityAtLocation(x: number, y: number): Entity | undefined {
+        return this.entities.find((en) => en.blocksMovement && en.x == x && en.y == y)
+    }
+
+    public getActorAtLocation(x: number, y: number): Actor | undefined {
+        return this.actors.find((en) => en.x == x && en.y == y)
+    }
+
+    drawEntity(en: Entity) {
+        this.display.draw(en.x, en.y, en.char, en.fg, en.bg)
+        if (en.sightRange > 0) {
+            this.drawCircle(en.x, en.y, en.sightRange, en.sightColor)
+        }
+    }
+
+    drawCircle(cx: number, cy: number, r: number, bg: string) {
+        for (let y = cy - r ; y < cy + r ; y++) {
+            for (let x = cx - r ; x < cx + r ; x++) {
+                if (this.tileIsWalkable(x, y)) {
+                    this.display.drawOver(x, y, '', '#000', bg)
+                }
+            }
         }
     }
 
@@ -158,7 +211,6 @@ export class GameMap {
 
         const fov = new ROT.FOV.PreciseShadowcasting(this.lightPasses.bind(this));
         fov.compute(player.x, player.y, 8, (x, y, _r, visibility) => {
-            console.log(visibility)
             if (visibility === 1) {
                 this.tiles[y * Engine.MAP_WIDTH + x].visible = true;
                 this.tiles[y * Engine.MAP_WIDTH + x].seen = true;

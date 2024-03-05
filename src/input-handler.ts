@@ -1,6 +1,8 @@
 import { Display } from 'rot-js';
 // import { renderFrameWithTitle } from './render-functions';
-import { Action } from './actions';
+import { Action, BumpAction, WaitAction } from './actions';
+import { Colors } from './colors';
+import { renderFrameWithTitle } from './render-functions';
 
 interface LogMap {
     [key: string]: number;
@@ -49,29 +51,21 @@ const MOVE_KEYS: DirectionMap = {
     ArrowDown: [0, 1],
     ArrowLeft: [-1, 0],
     ArrowRight: [1, 0],
-    Home: [-1, -1],
-    End: [-1, 1],
-    PageUp: [1, -1],
-    PageDown: [1, 1],
     // Numpad Keys
-    1: [-1, 1],
     2: [0, 1],
-    3: [1, 1],
     4: [-1, 0],
     6: [1, 0],
-    7: [-1, -1],
     8: [0, -1],
-    9: [1, -1],
     // Vi keys
     h: [-1, 0],
     j: [0, 1],
     k: [0, -1],
     l: [1, 0],
-    y: [-1, -1],
-    u: [1, -1],
-    b: [-1, 1],
-    n: [1, 1],
-    // UI keys
+    // WASD keys
+    w: [0, -1],
+    a: [-1, 0],
+    s: [0, 1],
+    d: [1, 0],
 };
 
 export class GameInputHandler extends BaseInputHandler {
@@ -87,19 +81,19 @@ export class GameInputHandler extends BaseInputHandler {
             // }
             if (event.key in MOVE_KEYS) {
                 const [dx, dy] = MOVE_KEYS[event.key];
-                // return new BumpAction(dx, dy);
+                return new BumpAction(dx, dy);
             }
             if (event.key === 'v') {
                 //   this.nextHandler = new LogInputHandler();
             }
             if (event.key === '5' || event.key === '.') {
-                // return new WaitAction();
+                return new WaitAction();
             }
             if (event.key === 'g') {
                 // return new PickupAction();
             }
             if (event.key === 'i') {
-                //this.nextHandler = new InventoryInputHandler(InputState.UseInventory);
+                this.nextHandler = new InventoryInputHandler(InputState.UseInventory);
             }
             if (event.key === 'd') {
                 //this.nextHandler = new InventoryInputHandler(InputState.DropInventory);
@@ -115,6 +109,67 @@ export class GameInputHandler extends BaseInputHandler {
             }
         }
 
+        return null;
+    }
+}
+
+export class InventoryInputHandler extends BaseInputHandler {
+    constructor(inputState: InputState) {
+        super(inputState);
+    }
+
+    onRender(display: Display) {
+        const title =
+            this.inputState === InputState.UseInventory
+                ? 'Select an item to use'
+                : 'Select an item to drop';
+        const itemCount = window.engine.player!.inventory.items.length;
+        const height = itemCount + 2 <= 3 ? 3 : itemCount + 2;
+        const width = title.length + 4;
+        const x = window.engine.player!.x <= 30 ? 40 : 0;
+        const y = 0;
+
+        renderFrameWithTitle(x, y, width, height, title);
+
+        if (itemCount > 0) {
+            window.engine.player!.inventory.items.forEach((i, index) => {
+                const key = String.fromCharCode('a'.charCodeAt(0) + index);
+                const isEquipped = false;//window.engine.player!.equipment.itemIsEquipped(i);
+                let itemString = `(${key}) ${i.name}`;
+                itemString = isEquipped ? `${itemString} (E)` : itemString;
+                display.drawText(x + 1, y + index + 1, itemString);
+            });
+        } else {
+            display.drawText(x + 1, y + 1, '(Empty)');
+        }
+    }
+
+    handleKeyboardInput(event: KeyboardEvent): Action | null {
+        if (event.key.length === 1) {
+            const ordinal = event.key.charCodeAt(0);
+            const index = ordinal - 'a'.charCodeAt(0);
+
+            if (index >= 0 && index <= 26) {
+                const item = window.engine.player!.inventory.items[index];
+                if (item) {
+                    this.nextHandler = new GameInputHandler();
+                    if (this.inputState === InputState.UseInventory) {
+                        if (item.consumable) {
+                            //return item.consumable.getAction();
+                        } else if (item.equippable) {
+                            //return new EquipAction(item);
+                        }
+                        return null;
+                    } else if (this.inputState === InputState.DropInventory) {
+                        //return new DropItem(item);
+                    }
+                } else {
+                    window.messageLog.addMessage('Invalid entry.', Colors.InvalidItemText);
+                    return null;
+                }
+            }
+        }
+        this.nextHandler = new GameInputHandler();
         return null;
     }
 }

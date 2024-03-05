@@ -4,18 +4,18 @@ export class Level extends BaseComponent {
     constructor(
         public levelUpBase: number = 0,
         public xpGiven: number = 0,
-        public currentLevel: number =0,
+        public currentLevel: number = 0,
         public currentXp: number = 0,
         public levelUpFactor: number = 0,
     ) {
         super()
     }
 
-    public get experienceToNextLevel() : number {
+    public get experienceToNextLevel(): number {
         return this.levelUpBase + this.currentLevel * this.levelUpFactor
     }
 
-    public get requiresLevelUp() : boolean {
+    public get requiresLevelUp(): boolean {
         return this.currentXp > this.experienceToNextLevel
     }
 
@@ -34,4 +34,6 @@ export class Level extends BaseComponent {
         this.currentXp -= this.experienceToNextLevel
         this.currentLevel++
     }
+
+
 }

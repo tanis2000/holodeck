@@ -1,4 +1,5 @@
-import { BaseAI } from "./components/ai";
+import { BaseAI, TurretAI } from "./components/ai";
+import { Alarm } from "./components/alarm";
 import { BaseComponent } from "./components/base-component";
 import { Consumable } from "./components/consumable";
 import { Equipment } from "./components/equipment";
@@ -7,6 +8,15 @@ import { Fighter } from "./components/fighter";
 import { Inventory } from "./components/inventory";
 import { Level } from "./components/level";
 import { GameMap } from "./game-map";
+
+type SPAWNMAP = {
+    [key: string]: (gameMap: GameMap, x: number, y: number) => Entity;
+};
+
+export const spawnMap: SPAWNMAP = {
+    spawnSurveillanceTurret,
+    spawnServer,
+};
 
 export enum RenderOrder {
     Corpse,
@@ -24,6 +34,8 @@ export class Entity {
     blocksMovement: boolean = false
     renderOrder: RenderOrder = RenderOrder.Corpse
     parent: GameMap | BaseComponent | null
+    sightRange: number = 0
+    sightColor: string = '#e8431a95'
 
     constructor(
         x: number,
@@ -84,6 +96,7 @@ export class Actor extends Entity {
     fighter: Fighter
     inventory: Inventory
     level: Level
+    alarm: Alarm | null
 
     constructor(
         x: number,
@@ -97,6 +110,7 @@ export class Actor extends Entity {
         fighter: Fighter,
         inventory: Inventory,
         level: Level,
+        alarm: Alarm | null = null,
         parent: GameMap | BaseComponent | null = null,
     ) {
         super(x, y, char, fg, bg, name, true, RenderOrder.Actor, parent)
@@ -109,6 +123,10 @@ export class Actor extends Entity {
         this.inventory.parent = this
         this.level = level
         this.level.parent = this
+        this.alarm = alarm
+        if (this.alarm != null) {
+            this.alarm.parent = this
+        }
     }
 
     public get isAlive(): boolean {
@@ -152,15 +170,52 @@ export function spawnPlayer(
         x,
         y,
         '@',
-        '#fff',
-        '#000',
+        '#6dbaf9',
+        '#000000',
         'Player',
         null,
         new Equipment(),
-        new Fighter(30, 1, 2),
+        new Fighter(10, 1, 1),
         new Inventory(26),
         new Level(200),
+        new Alarm(3),
         gameMap,
     );
     return player;
+}
+
+export function spawnSurveillanceTurret(gameMap: GameMap, x: number, y: number): Actor {
+    return new Actor(
+        x,
+        y,
+        't',
+        '#687368',
+        '#000',
+        'Surveillance Turret',
+        new TurretAI(3),
+        new Equipment(),
+        new Fighter(1, 0, 3),
+        new Inventory(0),
+        new Level(0, 1),
+        null,
+        gameMap,
+    );
+}
+
+export function spawnServer(gameMap: GameMap, x: number, y: number): Actor {
+    return new Actor(
+        x,
+        y,
+        'S',
+        '#c961e6',
+        '#000',
+        'Server',
+        null,
+        new Equipment(),
+        new Fighter(1, 0, 3),
+        new Inventory(0),
+        new Level(0, 1),
+        null,
+        gameMap,
+    );
 }

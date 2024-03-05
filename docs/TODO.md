@@ -52,5 +52,5 @@ Enemies
 * Mainframe
 * Server
 * NAS
-* Surveillance cam (does not move)
+* Surveillance turret (does not move)
 * Surveillance drone (moves)
