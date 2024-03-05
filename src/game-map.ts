@@ -25,6 +25,7 @@ export class GameMap {
     public static corridors: Corridor[]
     entities: Entity[]
     tiles: Tile[]
+    startingRoom: Room | null = null
 
     constructor(display: ROT.Display) {
         this.display = display
@@ -32,8 +33,8 @@ export class GameMap {
         this.entities = []
         this.map = new ROT.Map.Digger(Engine.MAP_WIDTH, Engine.MAP_HEIGHT)
         this.initMap()
-        const startingRoom = this.map.getRooms()[0]
-        window.engine.player = spawnPlayer(startingRoom.getCenter()[0], startingRoom.getCenter()[1], this)
+        this.startingRoom = this.map.getRooms()[0]
+        //window.engine.player = spawnPlayer(startingRoom.getCenter()[0], startingRoom.getCenter()[1], this)
     }
 
     public get gameMap(): GameMap {

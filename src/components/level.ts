@@ -1,3 +1,4 @@
+import { Actor } from "../entity";
 import { BaseComponent } from "./base-component";
 
 export class Level extends BaseComponent {
@@ -35,5 +36,35 @@ export class Level extends BaseComponent {
         this.currentLevel++
     }
 
+    increaseMaxHp(amount: number = 10) {
+        const actor = this.parent as Actor;
+        if (!actor) return;
+        actor.fighter.maxHp += amount;
+        actor.fighter.hp += amount;
+
+        window.messageLog.addMessage('Your health improves!');
+
+        this.increaseLevel();
+    }
+
+    increasePower(amount: number = 1) {
+        const actor = this.parent as Actor;
+        if (!actor) return;
+        actor.fighter.basePower += amount;
+
+        window.messageLog.addMessage('You feel stronger!');
+
+        this.increaseLevel();
+    }
+
+    increaseDefense(amount: number = 1) {
+        const actor = this.parent as Actor;
+        if (!actor) return;
+        actor.fighter.baseDefense += amount;
+
+        window.messageLog.addMessage('Your movements are getting swifter!');
+
+        this.increaseLevel();
+    }
 
 }

@@ -177,7 +177,7 @@ export function spawnPlayer(
         new Equipment(),
         new Fighter(10, 1, 1),
         new Inventory(26),
-        new Level(200),
+        new Level(200, 0, 1),
         new Alarm(3),
         gameMap,
     );

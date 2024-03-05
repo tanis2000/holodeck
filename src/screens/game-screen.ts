@@ -5,24 +5,24 @@ import { BaseInputHandler, GameInputHandler, InputState } from "../input-handler
 import { Action } from "../actions";
 import { ImpossibleException } from "../exceptions";
 import { Colors } from "../colors";
-import { renderAlarmBar, renderDefenseBar, renderFrameWithTitle, renderHealthBar, renderPlayerLevelBar, renderPowerBar } from "../render-functions";
+import { renderAlarmBar, renderDefenseBar, renderFrameWithTitle, renderHealthBar, renderNamesAtLocation, renderPlayerLevelBar, renderPowerBar } from "../render-functions";
+import { spawnPlayer } from "../entity";
 
 export class GameScreen extends BaseScreen {
-    gameMap: GameMap
+    gameMap: GameMap | null = null
     inputHandler: BaseInputHandler
 
     constructor(display: Display) {
         super(display)
         this.inputHandler = new GameInputHandler()
-        this.gameMap = new GameMap(display)
-        this.gameMap.updateFov(window.engine.player!)
+        this.reset()
     }
 
     update(event: KeyboardEvent): void {
         const action = this.inputHandler.handleKeyboardInput(event);
         if (action instanceof Action) {
             try {
-                action.perform(window.engine.player!, this.gameMap);
+                action.perform(window.engine.player!, this.gameMap!);
                 this.handleEnemyTurns();
             } catch (error) {
                 if (error instanceof ImpossibleException) {
@@ -30,7 +30,7 @@ export class GameScreen extends BaseScreen {
                 }
             }
         }
-        this.gameMap.updateFov(window.engine.player!)
+        this.gameMap!.updateFov(window.engine.player!)
         this.inputHandler = this.inputHandler.nextHandler;
     }
 
@@ -51,12 +51,12 @@ export class GameScreen extends BaseScreen {
         );
         renderPowerBar(
             this.display,
-            window.engine.player!.fighter.baseAttack,
+            window.engine.player!.fighter.power,
             20,
         )
         renderDefenseBar(
             this.display,
-            window.engine.player!.fighter.baseDefense,
+            window.engine.player!.fighter.defense,
             20,
         )
         renderPlayerLevelBar(
@@ -64,8 +64,14 @@ export class GameScreen extends BaseScreen {
             window.engine.player!.level.currentLevel,
             20,
         )
+        renderNamesAtLocation(
+            21,
+            44,
+            this.inputHandler.mousePosition,
+            this.gameMap!,
+        )
 
-        this.gameMap.render()
+        this.gameMap!.render()
 
         if (this.inputHandler.inputState === InputState.Log) {
             renderFrameWithTitle(3, 3, 74, 38, 'Message History');
@@ -90,12 +96,23 @@ export class GameScreen extends BaseScreen {
     }
 
     handleEnemyTurns() {
-        this.gameMap.actors.forEach((e) => {
+        this.gameMap!.actors.forEach((e) => {
             if (e.isAlive) {
                 try {
-                    e.ai?.perform(e, this.gameMap);
+                    e.ai?.perform(e, this.gameMap!);
                 } catch { }
             }
         });
+    }
+
+    reset() {
+        this.gameMap = new GameMap(this.display)
+        if (window.engine.player == null) {
+            window.engine.player = spawnPlayer(this.gameMap!.startingRoom!.getCenter()[0], this.gameMap!.startingRoom!.getCenter()[1], this.gameMap)
+        } else {
+            window.engine.player.alarm!.resetLevel()
+            window.engine.player.place(this.gameMap!.startingRoom!.getCenter()[0], this.gameMap!.startingRoom!.getCenter()[1], this.gameMap)
+        }
+        this.gameMap.updateFov(window.engine.player!)
     }
 }

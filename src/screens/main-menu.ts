@@ -2,6 +2,7 @@ import { Display } from "rot-js";
 import { BaseScreen } from "./base-screen";
 import { Engine } from "../engine";
 import { GameScreen } from "./game-screen";
+import { BaseInputHandler } from "../input-handler";
 
 const OPTIONS = ['[N] Play a new game']
 
@@ -12,8 +13,11 @@ if (localStorage.getItem('7drl-2024-save')) {
 const MENU_WIDTH = 24
 
 export class MainMenu extends BaseScreen {
+    inputHandler: BaseInputHandler | null;
+
     constructor(display: Display) {
         super(display)
+        this.inputHandler = null
     }
 
     update(event: KeyboardEvent): void {

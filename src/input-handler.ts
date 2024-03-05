@@ -1,6 +1,6 @@
 import { Display } from 'rot-js';
 // import { renderFrameWithTitle } from './render-functions';
-import { Action, BumpAction, WaitAction } from './actions';
+import { Action, BumpAction, LogAction, WaitAction } from './actions';
 import { Colors } from './colors';
 import { renderFrameWithTitle } from './render-functions';
 
@@ -74,17 +74,17 @@ export class GameInputHandler extends BaseInputHandler {
     }
 
     handleKeyboardInput(event: KeyboardEvent): Action | null {
-        if (true == true /*window.engine.player.fighter.hp > 0*/) {
-            // if (window.engine.player.level.requiresLevelUp) {
-            //   this.nextHandler = new LevelUpEventHandler();
-            //   return null;
-            // }
+        if (window.engine.player!.fighter.hp > 0 && !window.engine.player!.alarm!.isToggled()) {
+            if (window.engine.player!.level.requiresLevelUp) {
+                this.nextHandler = new LevelUpEventHandler();
+                return null;
+            }
             if (event.key in MOVE_KEYS) {
                 const [dx, dy] = MOVE_KEYS[event.key];
                 return new BumpAction(dx, dy);
             }
             if (event.key === 'v') {
-                //   this.nextHandler = new LogInputHandler();
+                this.nextHandler = new LogInputHandler();
             }
             if (event.key === '5' || event.key === '.') {
                 return new WaitAction();
@@ -95,17 +95,14 @@ export class GameInputHandler extends BaseInputHandler {
             if (event.key === 'i') {
                 this.nextHandler = new InventoryInputHandler(InputState.UseInventory);
             }
-            if (event.key === 'd') {
-                //this.nextHandler = new InventoryInputHandler(InputState.DropInventory);
+            if (event.key === 'o') {
+                this.nextHandler = new InventoryInputHandler(InputState.DropInventory);
             }
             if (event.key === 'c') {
-                //this.nextHandler = new CharacterScreenInputHandler();
+                this.nextHandler = new CharacterScreenInputHandler();
             }
             if (event.key === '/') {
                 //this.nextHandler = new LookHandler();
-            }
-            if (event.key === '>') {
-                // return new TakeStairsAction();
             }
         }
 
@@ -169,6 +166,144 @@ export class InventoryInputHandler extends BaseInputHandler {
                 }
             }
         }
+        this.nextHandler = new GameInputHandler();
+        return null;
+    }
+}
+
+export class CharacterScreenInputHandler extends BaseInputHandler {
+    constructor() {
+        super();
+    }
+
+    onRender(display: Display) {
+        const x = window.engine.player!.x <= 30 ? 40 : 0;
+        const y = 0;
+        const title = 'Character Information';
+        const width = title.length + 4;
+
+        renderFrameWithTitle(x, y, width, 7, title);
+
+        display.drawText(
+            x + 1,
+            y + 1,
+            `Level: ${window.engine.player!.level.currentLevel}`,
+        );
+        display.drawText(
+            x + 1,
+            y + 2,
+            `XP: ${window.engine.player!.level.currentXp}`,
+        );
+        display.drawText(
+            x + 1,
+            y + 3,
+            `XP for next Level: ${window.engine.player!.level.experienceToNextLevel}`,
+        );
+        display.drawText(
+            x + 1,
+            y + 4,
+            `Power: ${window.engine.player!.fighter.power}`,
+        );
+        display.drawText(
+            x + 1,
+            y + 5,
+            `Defense: ${window.engine.player!.fighter.defense}`,
+        );
+    }
+
+    handleKeyboardInput(_event: KeyboardEvent): Action | null {
+        this.nextHandler = new GameInputHandler();
+        return null;
+    }
+}
+
+export class LogInputHandler extends BaseInputHandler {
+    constructor() {
+        super(InputState.Log);
+    }
+
+    handleKeyboardInput(event: KeyboardEvent): Action | null {
+        if (event.key === 'Home') {
+            return new LogAction(() => (this.logCursorPosition = 0));
+        }
+        if (event.key === 'End') {
+            return new LogAction(
+                () => (this.logCursorPosition = window.messageLog.messages.length - 1),
+            );
+        }
+
+        const scrollAmount = LOG_KEYS[event.key];
+
+        if (!scrollAmount) {
+            this.nextHandler = new GameInputHandler();
+        }
+
+        return new LogAction(() => {
+            if (scrollAmount < 0 && this.logCursorPosition === 0) {
+                this.logCursorPosition = window.messageLog.messages.length - 1;
+            } else if (
+                scrollAmount > 0 &&
+                this.logCursorPosition === window.messageLog.messages.length - 1
+            ) {
+                this.logCursorPosition = 0;
+            } else {
+                this.logCursorPosition = Math.max(
+                    0,
+                    Math.min(
+                        this.logCursorPosition + scrollAmount,
+                        window.messageLog.messages.length - 1,
+                    ),
+                );
+            }
+        });
+    }
+}
+
+export class LevelUpEventHandler extends BaseInputHandler {
+    constructor() {
+        super();
+    }
+
+    onRender(display: Display) {
+        let x = 0;
+        if (window.engine.player!.x <= 30) {
+            x = 40;
+        }
+
+        renderFrameWithTitle(x, 0, 35, 8, 'Level Up');
+
+        display.drawText(x + 1, 1, 'Congratulations! You level up!');
+        display.drawText(x + 1, 2, 'Select an attribute to increase.');
+
+        display.drawText(
+            x + 1,
+            4,
+            `a) Constitution (+10 HP, from ${window.engine.player!.fighter.maxHp})`,
+        );
+        display.drawText(
+            x + 1,
+            5,
+            `b) Intelligence (+1 power, from ${window.engine.player!.fighter.power})`,
+        );
+        display.drawText(
+            x + 1,
+            6,
+            `c) Wit (+1 defense, from ${window.engine.player!.fighter.defense})`,
+        );
+    }
+
+    handleKeyboardInput(event: KeyboardEvent): Action | null {
+        if (event.key === 'a') {
+            window.engine.player!.level.increaseMaxHp();
+        } else if (event.key === 'b') {
+            window.engine.player!.level.increasePower();
+        } else if (event.key === 'c') {
+            window.engine.player!.level.increaseDefense();
+        } else {
+            window.messageLog.addMessage('Invalid entry.', Colors.InvalidText);
+            return null;
+        }
+
         this.nextHandler = new GameInputHandler();
         return null;
     }

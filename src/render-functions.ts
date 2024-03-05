@@ -1,5 +1,6 @@
 import { Display } from "rot-js";
 import { Colors } from "./colors";
+import { GameMap } from "./game-map";
 
 export function renderFrameWithTitle(
     x: number,
@@ -137,5 +138,25 @@ export function renderPlayerLevelBar(
 
     for (let i = 0; i < healthText.length; i++) {
         display.drawOver(i + 1, 49, healthText[i], Colors.PlayerLevelBarText, null);
+    }
+}
+
+export function renderNamesAtLocation(
+    x: number,
+    y: number,
+    mousePosition: [number, number],
+    gameMap: GameMap
+) {
+    const [mouseX, mouseY] = mousePosition;
+    if (
+        gameMap.isInBounds(mouseX, mouseY) &&
+        gameMap.tileIsVisible(mouseX, mouseY)
+    ) {
+        const names = gameMap.entities
+            .filter((e) => e.x === mouseX && e.y === mouseY)
+            .map((e) => e.name.charAt(0).toUpperCase() + e.name.substring(1))
+            .join(', ');
+
+        window.engine.display.drawText(x, y, names);
     }
 }

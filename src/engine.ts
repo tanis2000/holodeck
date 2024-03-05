@@ -27,7 +27,16 @@ export class Engine {
 
         window.addEventListener('keydown', (event) => {
             this.update(event);
-          });
+        });
+
+        window.addEventListener('mousemove', (event) => {
+            if (this.screen.inputHandler) {
+                this.screen.inputHandler.handleMouseMovement(
+                    this.display.eventToPosition(event),
+                );
+            }
+        });
+
     }
 
     update(event: KeyboardEvent) {

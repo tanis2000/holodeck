@@ -23,4 +23,7 @@ export enum Colors {
     PlayerLevelBarFilled = '#df7ec5',
     PlayerLevelBarText = '#000000',
     InvalidItemText = '#cf5300',
+    PlayerAttackText = '#5c87f5',
+    EnemyAttackText = '#eb3a3a',
+    InvalidText = '#f62d2d',
 }
