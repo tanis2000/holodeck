@@ -10,8 +10,10 @@ Steal sensitive information from their systems
 Rules
 -----
 
-Get close to servers/mainframes/NAS to try to hack into them.
-Hacking takes time. You have to stand still.
+(NO) Get close to servers/mainframes/NAS to try to hack into them.
+(NO) Hacking takes time. You have to stand still.
+Walk into servers/mainframes/NAS to try to hack them. If no software is equipped, you will bash them but get only a fraction of xp, no software
+XP can be considered Intel amount to evaluate the score
 
 Weapons (Programs)
 ------------------

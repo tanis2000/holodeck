@@ -160,3 +160,21 @@ export function renderNamesAtLocation(
         window.engine.display.drawText(x, y, names);
     }
 }
+
+export function renderXpBar(
+    display: Display,
+    currentValue: number,
+    maxValue: number,
+    totalWidth: number,
+) {
+    const barWidth = Math.floor((currentValue / maxValue) * totalWidth);
+
+    drawColoredBar(display, 60, 45, totalWidth, Colors.XpBarEmpty);
+    drawColoredBar(display, 60, 45, barWidth, Colors.XpBarFilled);
+
+    const healthText = `XP: ${currentValue}/${maxValue}`;
+
+    for (let i = 0; i < healthText.length; i++) {
+        display.drawOver(60 + i + 1, 45, healthText[i], Colors.XpBarText, null);
+    }
+}

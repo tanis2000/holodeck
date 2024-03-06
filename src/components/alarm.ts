@@ -1,5 +1,5 @@
 import { Colors } from "../colors";
-import { Actor, RenderOrder } from "../entity";
+import { Actor } from "../entity";
 import { GameScreen } from "../screens/game-screen";
 import { BaseComponent } from "./base-component";
 

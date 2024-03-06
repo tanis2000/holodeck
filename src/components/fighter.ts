@@ -1,4 +1,5 @@
 import { Colors } from "../colors";
+import { DamageInfo, DamageType } from "../damage-types";
 import { Actor, RenderOrder } from "../entity";
 import { MainMenu } from "../screens/main-menu";
 import { BaseComponent } from "./base-component";
@@ -22,10 +23,9 @@ export class Fighter extends BaseComponent {
     }
 
     public set hp(value: number) {
+        if (this._hp === 0) return
+
         this._hp = Math.max(0, Math.min(value, this.maxHp))
-        if (this._hp === 0 && this.parent?.isAlive) {
-            this.die()
-        }
     }
 
     public get defenseBonus(): number {
@@ -50,7 +50,15 @@ export class Fighter extends BaseComponent {
         return this.basePower + this.powerBonus;
     }
 
-    die() {
+    takeDamage(damage: DamageInfo) {
+        this.hp -= damage.amount;
+
+        if (this._hp === 0) {
+            this.die(damage)
+        }
+    }
+
+    die(damage: DamageInfo) {
         if (!this.parent) return
 
         let deathMessage = ''
@@ -71,6 +79,12 @@ export class Fighter extends BaseComponent {
         this.parent.renderOrder = RenderOrder.Corpse
 
         window.messageLog.addMessage(deathMessage, fg)
+
+        if (damage.damageType == DamageType.Software) {
+            if (this.parent.loot != null) {
+                this.parent.loot.drop()
+            }
+        }
 
         if (window.engine.player === this.parent) {
             window.engine.nextScreen(new MainMenu(window.engine.display))

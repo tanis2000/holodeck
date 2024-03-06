@@ -1,12 +1,14 @@
 import { BaseAI, TurretAI } from "./components/ai";
 import { Alarm } from "./components/alarm";
 import { BaseComponent } from "./components/base-component";
-import { Consumable } from "./components/consumable";
+import { Consumable, EmpConsumable } from "./components/consumable";
 import { Equipment } from "./components/equipment";
-import { Equippable } from "./components/equippable";
+import { AgentTesla, Clippy, Equippable, FormBook, ILoveYou, MyDoom, Notepad, Slammer } from "./components/equippable";
 import { Fighter } from "./components/fighter";
 import { Inventory } from "./components/inventory";
 import { Level } from "./components/level";
+import { Loot } from "./components/loot";
+import { DamageType } from "./damage-types";
 import { GameMap } from "./game-map";
 
 type SPAWNMAP = {
@@ -14,8 +16,21 @@ type SPAWNMAP = {
 };
 
 export const spawnMap: SPAWNMAP = {
+    // Enemies
     spawnSurveillanceTurret,
     spawnServer,
+    spawnEmp,
+    // Software
+    spawnNotepad,
+    spawnClippy,
+    // Malware
+    spawnAgentTesla,
+    spawnFormBook,
+    spawnLokiBot,
+    // Virus
+    spawnILoveYou,
+    spawnMyDoom,
+    spawnSlammer
 };
 
 export enum RenderOrder {
@@ -97,6 +112,7 @@ export class Actor extends Entity {
     inventory: Inventory
     level: Level
     alarm: Alarm | null
+    loot: Loot | null
 
     constructor(
         x: number,
@@ -111,6 +127,7 @@ export class Actor extends Entity {
         inventory: Inventory,
         level: Level,
         alarm: Alarm | null = null,
+        loot: Loot | null = null,
         parent: GameMap | BaseComponent | null = null,
     ) {
         super(x, y, char, fg, bg, name, true, RenderOrder.Actor, parent)
@@ -126,6 +143,10 @@ export class Actor extends Entity {
         this.alarm = alarm
         if (this.alarm != null) {
             this.alarm.parent = this
+        }
+        this.loot = loot
+        if (this.loot != null) {
+            this.loot.parent = this
         }
     }
 
@@ -149,7 +170,7 @@ export class Item extends Entity {
         equippable: Equippable | null = null,
         parent: GameMap | BaseComponent | null = null,
     ) {
-        super(x, y, char, fg, bg, name, true, RenderOrder.Item, parent)
+        super(x, y, char, fg, bg, name, false, RenderOrder.Item, parent)
         this.consumable = consumable
         if (this.consumable != null) {
             this.consumable.parent = this
@@ -177,8 +198,9 @@ export function spawnPlayer(
         new Equipment(),
         new Fighter(10, 1, 1),
         new Inventory(26),
-        new Level(200, 0, 1),
+        new Level(5, 0, 1, 0, 15),
         new Alarm(3),
+        null,
         gameMap,
     );
     return player;
@@ -198,6 +220,7 @@ export function spawnSurveillanceTurret(gameMap: GameMap, x: number, y: number):
         new Inventory(0),
         new Level(0, 1),
         null,
+        null,
         gameMap,
     );
 }
@@ -212,10 +235,141 @@ export function spawnServer(gameMap: GameMap, x: number, y: number): Actor {
         'Server',
         null,
         new Equipment(),
-        new Fighter(1, 0, 3),
+        new Fighter(3, 0, 0),
         new Inventory(0),
         new Level(0, 1),
         null,
+        new Loot(),
+        gameMap,
+    );
+}
+
+export function spawnEmp(
+    gameMap: GameMap,
+    x: number,
+    y: number,
+): Item {
+    return new Item(
+        x,
+        y,
+        'c',
+        '#FFFF00',
+        '#000',
+        'Emp',
+        new EmpConsumable({ damageType: DamageType.Electricity, amount: 3 }),
+        null,
+        gameMap,
+    );
+}
+
+export function spawnNotepad(gameMap: GameMap, x: number, y: number): Item {
+    return new Item(
+        x,
+        y,
+        's',
+        '#00bfff',
+        '#000',
+        'Notepad',
+        null,
+        new Notepad(),
+        gameMap,
+    );
+}
+
+export function spawnClippy(gameMap: GameMap, x: number, y: number): Item {
+    return new Item(
+        x,
+        y,
+        's',
+        '#00bfff',
+        '#000',
+        'Clippy',
+        null,
+        new Clippy(),
+        gameMap,
+    );
+}
+
+export function spawnAgentTesla(gameMap: GameMap, x: number, y: number): Item {
+    return new Item(
+        x,
+        y,
+        'm',
+        '#33ff00',
+        '#000',
+        'Agent Tesla',
+        null,
+        new AgentTesla(),
+        gameMap,
+    );
+}
+
+export function spawnFormBook(gameMap: GameMap, x: number, y: number): Item {
+    return new Item(
+        x,
+        y,
+        'm',
+        '#33ff00',
+        '#000',
+        'FormBook',
+        null,
+        new FormBook(),
+        gameMap,
+    );
+}
+
+export function spawnLokiBot(gameMap: GameMap, x: number, y: number): Item {
+    return new Item(
+        x,
+        y,
+        'm',
+        '#33ff00',
+        '#000',
+        'Loki Bot',
+        null,
+        new FormBook(),
+        gameMap,
+    );
+}
+
+export function spawnILoveYou(gameMap: GameMap, x: number, y: number): Item {
+    return new Item(
+        x,
+        y,
+        'v',
+        '#00ffee',
+        '#000',
+        'ILoveYou',
+        null,
+        new ILoveYou(),
+        gameMap,
+    );
+}
+
+export function spawnMyDoom(gameMap: GameMap, x: number, y: number): Item {
+    return new Item(
+        x,
+        y,
+        'v',
+        '#00ffee',
+        '#000',
+        'MyDoom',
+        null,
+        new MyDoom(),
+        gameMap,
+    );
+}
+
+export function spawnSlammer(gameMap: GameMap, x: number, y: number): Item {
+    return new Item(
+        x,
+        y,
+        'v',
+        '#00ffee',
+        '#000',
+        'Slammer',
+        null,
+        new Slammer(),
         gameMap,
     );
 }

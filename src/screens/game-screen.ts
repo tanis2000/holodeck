@@ -5,7 +5,7 @@ import { BaseInputHandler, GameInputHandler, InputState } from "../input-handler
 import { Action } from "../actions";
 import { ImpossibleException } from "../exceptions";
 import { Colors } from "../colors";
-import { renderAlarmBar, renderDefenseBar, renderFrameWithTitle, renderHealthBar, renderNamesAtLocation, renderPlayerLevelBar, renderPowerBar } from "../render-functions";
+import { renderAlarmBar, renderDefenseBar, renderFrameWithTitle, renderHealthBar, renderNamesAtLocation, renderPlayerLevelBar, renderPowerBar, renderXpBar } from "../render-functions";
 import { spawnPlayer } from "../entity";
 
 export class GameScreen extends BaseScreen {
@@ -69,6 +69,12 @@ export class GameScreen extends BaseScreen {
             44,
             this.inputHandler.mousePosition,
             this.gameMap!,
+        )
+        renderXpBar(
+            this.display,
+            window.engine.player!.level.currentXp,
+            window.engine.player!.level.experienceToNextLevel,
+            20,
         )
 
         this.gameMap!.render()

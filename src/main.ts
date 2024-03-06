@@ -11,13 +11,12 @@ declare global {
 
 window.addEventListener('DOMContentLoaded', () => {
   window.messageLog = new MessageLog()
-  window.messageLog.addMessage('Welcome!')
+  window.messageLog.addMessage('I am your HoloDeck. Welcome to your first mission. Press ? to see the list of commands.')
   window.engine = new Engine()
   startAnimating(60);
 })
 
 let fpsInterval: number
-let startTime: number
 let now: number
 let then: number
 let elapsed: number
@@ -25,7 +24,6 @@ let elapsed: number
 function startAnimating(fps: number) {
   fpsInterval = 1000 / fps;
   then = Date.now();
-  startTime = then;
   animate();
 }
 

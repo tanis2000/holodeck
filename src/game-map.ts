@@ -1,9 +1,9 @@
 import * as ROT from "rot-js";
 import { Engine } from "./engine";
 import Digger from "rot-js/lib/map/digger";
-import { Actor, Entity, spawnMap, spawnPlayer } from "./entity";
+import { Actor, Entity, Item, RenderOrder, spawnMap } from "./entity";
 import { FLOOR_TILE, Tile, WALL_TILE } from "./tile-types";
-import { ENEMIES_CHANCES, MAX_ENEMIES_BY_LEVEL, generateRandomNumber, getMaxValueForLevel, getWeights } from "./rng";
+import { ENEMIES_CHANCES, ITEMS_CHANCES, MAX_ENEMIES_BY_LEVEL, MAX_ITEMS_BY_LEVEL, generateRandomNumber, getMaxValueForLevel, getWeights } from "./rng";
 import { Room } from "rot-js/lib/map/features";
 
 type Door = {
@@ -31,7 +31,7 @@ export class GameMap {
         this.display = display
         this.tiles = []
         this.entities = []
-        this.map = new ROT.Map.Digger(Engine.MAP_WIDTH, Engine.MAP_HEIGHT)
+        this.map = new ROT.Map.Digger(Engine.MAP_WIDTH, Engine.MAP_HEIGHT, {dugPercentage: 30})
         this.initMap()
         this.startingRoom = this.map.getRooms()[0]
         //window.engine.player = spawnPlayer(startingRoom.getCenter()[0], startingRoom.getCenter()[1], this)
@@ -44,6 +44,10 @@ export class GameMap {
     public get actors(): Actor[] {
         return this.entities.filter((en) => en instanceof Actor)
             .map((en) => en as Actor)
+    }
+
+    public get items(): Item[] {
+        return this.entities.filter((e) => e instanceof Item).map((e) => e as Item);
     }
 
     drawDoor(x: number, y: number) {
@@ -85,6 +89,20 @@ export class GameMap {
 
             if (!this.entities.some((e) => e.x == x && e.y == y)) {
                 const weights = getWeights(ENEMIES_CHANCES, level);
+                const spawnType = ROT.RNG.getWeightedValue(weights);
+                if (spawnType) {
+                    spawnMap[spawnType](this, x, y);
+                }
+            }
+        }
+
+        const numberOfItemsToAdd = generateRandomNumber(0, getMaxValueForLevel(MAX_ITEMS_BY_LEVEL, level))
+        for (let i = 0; i < numberOfItemsToAdd; i++) {
+            const x = generateRandomNumber(room.getLeft() + 1, room.getRight() - 1);
+            const y = generateRandomNumber(room.getTop(), room.getBottom() - 1);
+
+            if (!this.entities.some((e) => e.x == x && e.y == y)) {
+                const weights = getWeights(ITEMS_CHANCES, level);
                 const spawnType = ROT.RNG.getWeightedValue(weights);
                 if (spawnType) {
                     spawnMap[spawnType](this, x, y);
@@ -169,14 +187,14 @@ export class GameMap {
 
     drawEntity(en: Entity) {
         this.display.draw(en.x, en.y, en.char, en.fg, en.bg)
-        if (en.sightRange > 0) {
+        if (en.sightRange > 0 && en.renderOrder != RenderOrder.Corpse) {
             this.drawCircle(en.x, en.y, en.sightRange, en.sightColor)
         }
     }
 
     drawCircle(cx: number, cy: number, r: number, bg: string) {
-        for (let y = cy - r ; y < cy + r ; y++) {
-            for (let x = cx - r ; x < cx + r ; x++) {
+        for (let y = cy - r; y < cy + r; y++) {
+            for (let x = cx - r; x < cx + r; x++) {
                 if (this.tileIsWalkable(x, y)) {
                     this.display.drawOver(x, y, '', '#000', bg)
                 }
@@ -184,12 +202,23 @@ export class GameMap {
         }
     }
 
+    getTile(x: number, y: number): Tile | null {
+        if (!this.isInBounds(x, y)) {
+            return null
+        }
+        return this.tiles[y * Engine.MAP_WIDTH + x]
+    }
+
     public tileIsWalkable(x: number, y: number) {
-        return this.tiles[y * Engine.MAP_WIDTH + x].walkable
+        const tile = this.getTile(x, y)
+        return tile != null && tile.walkable
+        //return this.tiles[y * Engine.MAP_WIDTH + x].walkable
     }
 
     public tileIsVisible(x: number, y: number) {
-        return this.tiles[y * Engine.MAP_WIDTH + x].visible
+        const tile = this.getTile(x, y)
+        return tile != null && tile.visible
+        //return this.tiles[y * Engine.MAP_WIDTH + x].visible
     }
 
     isInBounds(x: number, y: number) {

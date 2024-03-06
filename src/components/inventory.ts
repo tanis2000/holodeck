@@ -1,4 +1,5 @@
 import { Actor, Item } from "../entity";
+import { GameMap } from "../game-map";
 import { BaseComponent } from "./base-component";
 
 export class Inventory extends BaseComponent {
@@ -13,4 +14,14 @@ export class Inventory extends BaseComponent {
         this.items = []
     }
 
+    drop(item: Item, gameMap: GameMap) {
+        const index = this.items.indexOf(item);
+        if (index >= 0) {
+            this.items.splice(index, 1);
+            if (this.parent) {
+                item.place(this.parent.x, this.parent.y, gameMap);
+            }
+            window.messageLog.addMessage(`You dropped ${item.name}."`);
+        }
+    }
 }

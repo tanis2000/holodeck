@@ -1,8 +1,10 @@
 import { Display } from 'rot-js';
 // import { renderFrameWithTitle } from './render-functions';
-import { Action, BumpAction, LogAction, WaitAction } from './actions';
+import { Action, BumpAction, DisconnectAction, DropItem, EquipAction, LogAction, PickupAction, WaitAction } from './actions';
 import { Colors } from './colors';
 import { renderFrameWithTitle } from './render-functions';
+import { Engine } from './engine';
+import { equipmentTypeToString } from './equipment-types';
 
 interface LogMap {
     [key: string]: number;
@@ -90,7 +92,7 @@ export class GameInputHandler extends BaseInputHandler {
                 return new WaitAction();
             }
             if (event.key === 'g') {
-                // return new PickupAction();
+                return new PickupAction();
             }
             if (event.key === 'i') {
                 this.nextHandler = new InventoryInputHandler(InputState.UseInventory);
@@ -100,6 +102,12 @@ export class GameInputHandler extends BaseInputHandler {
             }
             if (event.key === 'c') {
                 this.nextHandler = new CharacterScreenInputHandler();
+            }
+            if (event.key === '?') {
+                this.nextHandler = new HelpScreenInputHandler();
+            }
+            if (event.key === 'q') {
+                return new DisconnectAction();
             }
             if (event.key === '/') {
                 //this.nextHandler = new LookHandler();
@@ -122,7 +130,7 @@ export class InventoryInputHandler extends BaseInputHandler {
                 : 'Select an item to drop';
         const itemCount = window.engine.player!.inventory.items.length;
         const height = itemCount + 2 <= 3 ? 3 : itemCount + 2;
-        const width = title.length + 4;
+        const width = title.length + 45;
         const x = window.engine.player!.x <= 30 ? 40 : 0;
         const y = 0;
 
@@ -131,8 +139,11 @@ export class InventoryInputHandler extends BaseInputHandler {
         if (itemCount > 0) {
             window.engine.player!.inventory.items.forEach((i, index) => {
                 const key = String.fromCharCode('a'.charCodeAt(0) + index);
-                const isEquipped = false;//window.engine.player!.equipment.itemIsEquipped(i);
-                let itemString = `(${key}) ${i.name}`;
+                const isEquipped = window.engine.player!.equipment.itemIsEquipped(i);
+                const power = i.equippable ? ` Pow: ${i.equippable.powerBonus}` : ``
+                const defense = i.equippable ? ` Def: ${i.equippable.defenseBonus}` : ``
+                const programType = i.equippable ? ` (${equipmentTypeToString(i.equippable.equipmentType)})` : ``
+                let itemString = `(${key}) ${i.name}${programType}${power}${defense}`;
                 itemString = isEquipped ? `${itemString} (E)` : itemString;
                 display.drawText(x + 1, y + index + 1, itemString);
             });
@@ -152,13 +163,13 @@ export class InventoryInputHandler extends BaseInputHandler {
                     this.nextHandler = new GameInputHandler();
                     if (this.inputState === InputState.UseInventory) {
                         if (item.consumable) {
-                            //return item.consumable.getAction();
+                            return item.consumable.getAction();
                         } else if (item.equippable) {
-                            //return new EquipAction(item);
+                            return new EquipAction(item);
                         }
                         return null;
                     } else if (this.inputState === InputState.DropInventory) {
-                        //return new DropItem(item);
+                        return new DropItem(item);
                     }
                 } else {
                     window.messageLog.addMessage('Invalid entry.', Colors.InvalidItemText);
@@ -306,5 +317,111 @@ export class LevelUpEventHandler extends BaseInputHandler {
 
         this.nextHandler = new GameInputHandler();
         return null;
+    }
+}
+
+export abstract class SelectIndexHandler extends BaseInputHandler {
+    protected constructor() {
+        super(InputState.Target);
+        const { x, y } = window.engine.player!;
+        this.mousePosition = [x, y];
+    }
+
+    handleKeyboardInput(event: KeyboardEvent): Action | null {
+        if (event.key in MOVE_KEYS) {
+            const moveAmount = MOVE_KEYS[event.key];
+            let modifier = 1;
+            if (event.shiftKey) modifier = 5;
+            if (event.ctrlKey) modifier = 10;
+            if (event.altKey) modifier = 20;
+
+            let [x, y] = this.mousePosition;
+            const [dx, dy] = moveAmount;
+            x += dx * modifier;
+            y += dy * modifier;
+            x = Math.max(0, Math.min(x, Engine.MAP_WIDTH - 1));
+            y = Math.max(0, Math.min(y, Engine.MAP_HEIGHT - 1));
+            this.mousePosition = [x, y];
+            return null;
+        } else if (event.key === 'Enter') {
+            let [x, y] = this.mousePosition;
+            return this.onIndexSelected(x, y);
+        }
+
+        this.nextHandler = new GameInputHandler();
+        return null;
+    }
+
+    abstract onIndexSelected(x: number, y: number): Action | null;
+}
+
+
+export class HelpScreenInputHandler extends BaseInputHandler {
+    constructor() {
+        super();
+    }
+
+    onRender(display: Display) {
+        const x = window.engine.player!.x <= 30 ? 40 : 0;
+        let y = 0;
+        const title = 'Help';
+        const width = title.length + 40;
+
+        renderFrameWithTitle(x, y, width, 8, title);
+
+        y++
+        display.drawText(
+            x + 1,
+            y,
+            `Movement: wasd / hjkl / arrow keys`,
+        );
+        y++
+        display.drawText(
+            x + 1,
+            y,
+            `Inventory: i / o`,
+        );
+        y++
+        display.drawText(
+            x + 1,
+            y,
+            `Character: c`,
+        );
+        y++
+        display.drawText(
+            x + 1,
+            y,
+            `Log: v`,
+        );
+        y++
+        display.drawText(
+            x + 1,
+            y,
+            `Skip turn: .`,
+        );
+        y++
+        display.drawText(
+            x + 1,
+            y,
+            `Disconnect: q`,
+        );
+    }
+
+    handleKeyboardInput(_event: KeyboardEvent): Action | null {
+        this.nextHandler = new GameInputHandler();
+        return null;
+    }
+}
+
+type ActionCallback = (x: number, y: number) => Action | null;
+
+export class SingleRangedAttackHandler extends SelectIndexHandler {
+    constructor(public callback: ActionCallback) {
+        super();
+    }
+
+    onIndexSelected(x: number, y: number): Action | null {
+        this.nextHandler = new GameInputHandler();
+        return this.callback(x, y);
     }
 }

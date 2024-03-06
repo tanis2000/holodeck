@@ -20,6 +20,11 @@ export const MAX_ENEMIES_BY_LEVEL: LevelValue = [
     [6, 5],
 ];
 
+export const MAX_ITEMS_BY_LEVEL: LevelValue = [
+    [1, 1],
+    [4, 2],
+];
+
 export const ENEMIES_CHANCES: WeightedChoices[] = [
     {
         level: 1,
@@ -30,6 +35,17 @@ export const ENEMIES_CHANCES: WeightedChoices[] = [
         weights: [{ value: 'spawnServer', weight: 100 }],
     },
 ];
+
+export const ITEMS_CHANCES: WeightedChoices[] = [
+    {
+        level: 1,
+        weights: [
+            {value: 'spawnEmp', weight: 100},
+            {value: 'spawnNotepad', weight: 25},
+            {value: 'spawnAgentTesla', weight: 50},
+        ]
+    }
+]
 
 export function generateRandomNumber(min: number, max: number) {
     return Math.floor(Math.random() * (max - min + 1) + min);

@@ -28,6 +28,17 @@ export class MainMenu extends BaseScreen {
 
     render(): void {
         this.display.clear()
+
+        let x = 40
+        let y = 10
+        this.display.draw(x, y+0, ` _   _       _       ____            _    `, '#5be033', '#000')
+        this.display.draw(x, y+1, `| | | | ___ | | ___ |  _ \\  ___  ___| | __`, '#5be033', '#000')
+        this.display.draw(x, y+2, `| |_| |/ _ \\| |/ _ \\| | | |/ _ \\/ __| |/ /`, '#5be033', '#000')
+        this.display.draw(x, y+3, `|  _  | (_) | | (_) | |_| |  __/ (__|   < `, '#5be033', '#000')
+        this.display.draw(x, y+4, `|_| |_|\\___/|_|\\___/|____/ \\___|\\___|_|\\_\\`, '#5be033', '#000')
+
+        this.display.draw(Math.floor(Engine.WIDTH / 2), y+6, `v0.1.0`.padEnd(MENU_WIDTH, ' '), '#3f9a23', '#000')
+
         let i = 0
         for (const option of OPTIONS) {
             const x = Math.floor(Engine.WIDTH / 2)

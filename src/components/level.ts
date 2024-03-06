@@ -1,6 +1,17 @@
 import { Actor } from "../entity";
 import { BaseComponent } from "./base-component";
 
+/*
+type XpProgression = [number, number][]
+
+const XP_PROGRESSION: XpProgression = [
+    [1, 5],
+    [20, 10],
+    [40, 13],
+    [999999, 16]
+]
+*/
+
 export class Level extends BaseComponent {
     constructor(
         public levelUpBase: number = 0,
@@ -13,7 +24,7 @@ export class Level extends BaseComponent {
     }
 
     public get experienceToNextLevel(): number {
-        return this.levelUpBase + this.currentLevel * this.levelUpFactor
+        return this.levelUpBase + (this.currentLevel - 1) * this.levelUpFactor
     }
 
     public get requiresLevelUp(): boolean {
