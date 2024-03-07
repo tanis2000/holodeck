@@ -373,37 +373,42 @@ export class HelpScreenInputHandler extends BaseInputHandler {
         display.drawText(
             x + 1,
             y,
-            `Movement: wasd / hjkl / arrow keys`,
+            `%c{#ffffff}wasd / hjkl / arrow keys %c{#cccccc}- Move`,
         );
         y++
         display.drawText(
             x + 1,
             y,
-            `Inventory: i / o`,
+            `%c{#ffffff}i %c{#cccccc}- Use item`,
+        );
+        display.drawText(
+            x + 1,
+            y,
+            `%c{#ffffff}o %c{#cccccc}- Drop item`,
         );
         y++
         display.drawText(
             x + 1,
             y,
-            `Character: c`,
+            `%c{#ffffff}c %c{#cccccc}- Character`,
         );
         y++
         display.drawText(
             x + 1,
             y,
-            `Log: v`,
+            `%c{#ffffff}v %c{#cccccc}- Log`,
         );
         y++
         display.drawText(
             x + 1,
             y,
-            `Skip turn: .`,
+            `%c{#ffffff}. %c{#cccccc}- Skip turn`,
         );
         y++
         display.drawText(
             x + 1,
             y,
-            `Disconnect: q`,
+            `%c{#ffffff}q %c{#cccccc}- Connect to a new network`,
         );
     }
 

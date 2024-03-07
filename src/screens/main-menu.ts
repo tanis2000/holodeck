@@ -37,7 +37,7 @@ export class MainMenu extends BaseScreen {
         this.display.draw(x, y+3, `|  _  | (_) | | (_) | |_| |  __/ (__|   < `, '#5be033', '#000')
         this.display.draw(x, y+4, `|_| |_|\\___/|_|\\___/|____/ \\___|\\___|_|\\_\\`, '#5be033', '#000')
 
-        this.display.draw(Math.floor(Engine.WIDTH / 2), y+6, `v0.1.0`.padEnd(MENU_WIDTH, ' '), '#3f9a23', '#000')
+        this.display.draw(Math.floor(Engine.WIDTH / 2), y+6, `v0.1.1`.padEnd(MENU_WIDTH, ' '), '#3f9a23', '#000')
 
         let i = 0
         for (const option of OPTIONS) {
