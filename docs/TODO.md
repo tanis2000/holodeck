@@ -23,7 +23,7 @@ Weapons (Programs)
 * Malware
 * Virus
 * Decrypt
-* Radare
+* Radare2
 * LLDB
 
 Consumables (one-time use)
@@ -55,4 +55,11 @@ Enemies
 * Server
 * NAS
 * Surveillance turret (does not move)
-* Surveillance drone (moves)
+* Surveillance drone (moves and chases you)
+
+Unlocks
+-------
+
+Unlocks might be useful to drive the "one more time" urge to play.
+
+* Hack 10 servers -> Access to viruses

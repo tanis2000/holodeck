@@ -128,7 +128,7 @@ export class GameMap {
                 }
             }
             if (roomNumber > 0) {
-                this.placeEntities(room, 1)
+                this.placeEntities(room, window.engine.player ? window.engine.player!.level.currentLevel : 1)
             }
             roomNumber++
         }
@@ -196,7 +196,7 @@ export class GameMap {
         for (let y = cy - r; y < cy + r; y++) {
             for (let x = cx - r; x < cx + r; x++) {
                 if (this.tileIsWalkable(x, y)) {
-                    this.display.drawOver(x, y, '', '#000', bg)
+                    this.display.drawOver(x, y, '', null, bg)
                 }
             }
         }

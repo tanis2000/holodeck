@@ -1,3 +1,5 @@
+import * as ROT from 'rot-js'
+
 type LevelValue = [number, number][];
 
 type Choice = {
@@ -15,9 +17,9 @@ type WeightMap = {
 };
 
 export const MAX_ENEMIES_BY_LEVEL: LevelValue = [
-    [1, 2],
-    [4, 3],
-    [6, 5],
+    [1, 1],
+    [4, 2],
+    [6, 4],
 ];
 
 export const MAX_ITEMS_BY_LEVEL: LevelValue = [
@@ -28,11 +30,28 @@ export const MAX_ITEMS_BY_LEVEL: LevelValue = [
 export const ENEMIES_CHANCES: WeightedChoices[] = [
     {
         level: 1,
-        weights: [{ value: 'spawnSurveillanceTurret', weight: 80 }],
+        weights: [
+            { value: 'spawnSurveillanceTurret', weight: 80 },
+            { value: 'spawnServer', weight: 100 },
+        ],
     },
     {
-        level: 1,
-        weights: [{ value: 'spawnServer', weight: 100 }],
+        level: 2,
+        weights: [
+            { value: 'spawnDrone', weight: 100 },
+        ],
+    },
+    {
+        level: 4,
+        weights: [
+            { value: 'spawnNAS', weight: 40 },
+        ],
+    },
+    {
+        level: 6,
+        weights: [
+            { value: 'spawnMainframe', weight: 20 },
+        ],
     },
 ];
 
@@ -42,13 +61,32 @@ export const ITEMS_CHANCES: WeightedChoices[] = [
         weights: [
             {value: 'spawnEmp', weight: 100},
             {value: 'spawnNotepad', weight: 25},
-            {value: 'spawnAgentTesla', weight: 50},
+            {value: 'spawnAgentTesla', weight: 15},
         ]
-    }
+    },
+    {
+        level: 2,
+        weights: [
+            {value: 'spawnEmp', weight: 20},
+            {value: 'spawnHealthPotion', weight: 10},
+            {value: 'spawnGrenade', weight: 15},
+            {value: 'spawnClippy', weight: 20},
+            {value: 'spawnFormBook', weight: 20},
+            {value: 'spawnILoveYou', weight: 20},
+        ]
+    },
+    {
+        level: 3,
+        weights: [
+            {value: 'spawnLokiBot', weight: 50},
+            {value: 'spawnMyDoom', weight: 50},
+            {value: 'spawnSlammer', weight: 50},
+        ]
+    },
 ]
 
 export function generateRandomNumber(min: number, max: number) {
-    return Math.floor(Math.random() * (max - min + 1) + min);
+    return Math.floor(ROT.RNG.getUniform() * (max - min + 1) + min);
 }
 
 

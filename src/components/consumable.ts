@@ -1,10 +1,10 @@
 import { Action, ItemAction } from "../actions";
 import { Colors } from "../colors";
 import { DamageInfo } from "../damage-types";
-import { Entity, Item } from "../entity";
+import { Actor, Entity, Item } from "../entity";
 import { ImpossibleException } from "../exceptions";
 import { GameMap } from "../game-map";
-import { SingleRangedAttackHandler } from "../input-handler";
+import { AreaRangedAttackHandler, SingleRangedAttackHandler } from "../input-handler";
 import { Inventory } from "./inventory";
 
 export abstract class Consumable {
@@ -75,5 +75,81 @@ export class EmpConsumable extends Consumable {
         );
         target.fighter.takeDamage(this.damage)
         this.consume()
+    }
+}
+
+export class HealingConsumable extends Consumable {
+    constructor(public amount: number, public parent: Item | null = null) {
+        super(parent);
+    }
+
+    activate(_action: ItemAction, entity: Entity) {
+        const consumer = entity as Actor;
+        if (!consumer) return;
+
+        const amountRecovered = consumer.fighter.heal(this.amount);
+
+        if (amountRecovered > 0) {
+            window.messageLog.addMessage(
+                `You consume the ${this.parent?.name}, and recover ${amountRecovered} HP!`,
+                Colors.HealthRecoveredText,
+            );
+            this.consume();
+        } else {
+            throw new ImpossibleException('Your health is already full.');
+        }
+    }
+}
+
+export class ExplosiveConsumable extends Consumable {
+    constructor(
+        public damage: DamageInfo,
+        public radius: number,
+        parent: Item | null = null,
+    ) {
+        super(parent);
+    }
+
+    getAction(): Action | null {
+        window.messageLog.addMessage(
+            'Select a target location.',
+            Colors.NeedTargetText,
+        );
+        window.engine.screen.inputHandler = new AreaRangedAttackHandler(
+            this.radius,
+            (x, y) => {
+                return new ItemAction(this.parent, [x, y]);
+            },
+        );
+        return null;
+    }
+
+    activate(action: ItemAction, _entity: Entity, gameMap: GameMap) {
+        const { targetPosition } = action;
+
+        if (!targetPosition) {
+            throw new ImpossibleException('You must select an area to target.');
+        }
+        const [x, y] = targetPosition;
+        if (!gameMap.tileIsVisible(x, y)) {
+            throw new ImpossibleException(
+                'You cannot target an area that you cannot see.',
+            );
+        }
+
+        let targetsHit = false;
+        for (let actor of gameMap.actors) {
+            if (actor.distance(x, y) <= this.radius) {
+                window.messageLog.addMessage(
+                    `The ${actor.name} is engulfed in a fiery explosion, taking ${this.damage} damage!`,
+                );
+                actor.fighter.takeDamage(this.damage);
+                targetsHit = true;
+            }
+        }
+        if (!targetsHit) {
+            throw new ImpossibleException('There are no targets in the radius.');
+        }
+        this.consume();
     }
 }

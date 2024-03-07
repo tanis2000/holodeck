@@ -1,9 +1,9 @@
-import { BaseAI, TurretAI } from "./components/ai";
+import { BaseAI, HostileAI, TurretAI } from "./components/ai";
 import { Alarm } from "./components/alarm";
 import { BaseComponent } from "./components/base-component";
-import { Consumable, EmpConsumable } from "./components/consumable";
+import { Consumable, EmpConsumable, ExplosiveConsumable, HealingConsumable } from "./components/consumable";
 import { Equipment } from "./components/equipment";
-import { AgentTesla, Clippy, Equippable, FormBook, ILoveYou, MyDoom, Notepad, Slammer } from "./components/equippable";
+import { AgentTesla, Clippy, Equippable, FormBook, ILoveYou, LokiBot, MyDoom, Notepad, Slammer } from "./components/equippable";
 import { Fighter } from "./components/fighter";
 import { Inventory } from "./components/inventory";
 import { Level } from "./components/level";
@@ -19,7 +19,11 @@ export const spawnMap: SPAWNMAP = {
     // Enemies
     spawnSurveillanceTurret,
     spawnServer,
+    spawnDrone,
+    // Consumables
     spawnEmp,
+    spawnHealthPotion,
+    spawnGrenade,
     // Software
     spawnNotepad,
     spawnClippy,
@@ -50,7 +54,7 @@ export class Entity {
     renderOrder: RenderOrder = RenderOrder.Corpse
     parent: GameMap | BaseComponent | null
     sightRange: number = 0
-    sightColor: string = '#e8431a95'
+    sightColor: string = '#e4c32e'
 
     constructor(
         x: number,
@@ -210,7 +214,7 @@ export function spawnSurveillanceTurret(gameMap: GameMap, x: number, y: number):
     return new Actor(
         x,
         y,
-        't',
+        'T',
         '#687368',
         '#000',
         'Surveillance Turret',
@@ -219,6 +223,25 @@ export function spawnSurveillanceTurret(gameMap: GameMap, x: number, y: number):
         new Fighter(1, 0, 3),
         new Inventory(0),
         new Level(0, 1),
+        null,
+        null,
+        gameMap,
+    );
+}
+
+export function spawnDrone(gameMap: GameMap, x: number, y: number): Actor {
+    return new Actor(
+        x,
+        y,
+        'D',
+        '#ecde1f',
+        '#000',
+        'Drone',
+        new HostileAI(),
+        new Equipment(),
+        new Fighter(2, 5, 2),
+        new Inventory(0),
+        new Level(0, 2),
         null,
         null,
         gameMap,
@@ -244,6 +267,44 @@ export function spawnServer(gameMap: GameMap, x: number, y: number): Actor {
     );
 }
 
+export function spawnNAS(gameMap: GameMap, x: number, y: number): Actor {
+    return new Actor(
+        x,
+        y,
+        'N',
+        '#c961e6',
+        '#000',
+        'NAS',
+        null,
+        new Equipment(),
+        new Fighter(5, 10, 0),
+        new Inventory(0),
+        new Level(0, 5),
+        null,
+        new Loot(),
+        gameMap,
+    );
+}
+
+export function spawnMainframe(gameMap: GameMap, x: number, y: number): Actor {
+    return new Actor(
+        x,
+        y,
+        'M',
+        '#c961e6',
+        '#000',
+        'Mainframe',
+        null,
+        new Equipment(),
+        new Fighter(50, 15, 5),
+        new Inventory(0),
+        new Level(0, 15),
+        null,
+        new Loot(),
+        gameMap,
+    );
+}
+
 export function spawnEmp(
     gameMap: GameMap,
     x: number,
@@ -252,11 +313,47 @@ export function spawnEmp(
     return new Item(
         x,
         y,
-        'c',
+        'e',
         '#FFFF00',
         '#000',
         'Emp',
         new EmpConsumable({ damageType: DamageType.Electricity, amount: 3 }),
+        null,
+        gameMap,
+    );
+}
+
+export function spawnHealthPotion(
+    gameMap: GameMap,
+    x: number,
+    y: number,
+): Item {
+    return new Item(
+        x,
+        y,
+        'h',
+        '#89ff68',
+        '#000',
+        'Health USB Stick',
+        new HealingConsumable(4),
+        null,
+        gameMap,
+    );
+}
+
+export function spawnGrenade(
+    gameMap: GameMap,
+    x: number,
+    y: number,
+): Item {
+    return new Item(
+        x,
+        y,
+        'f',
+        '#ff8000',
+        '#000',
+        'Grenade',
+        new ExplosiveConsumable({ damageType: DamageType.Fire, amount: 3 }, 3),
         null,
         gameMap,
     );
@@ -327,7 +424,7 @@ export function spawnLokiBot(gameMap: GameMap, x: number, y: number): Item {
         '#000',
         'Loki Bot',
         null,
-        new FormBook(),
+        new LokiBot(),
         gameMap,
     );
 }

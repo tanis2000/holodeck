@@ -50,6 +50,16 @@ export class Fighter extends BaseComponent {
         return this.basePower + this.powerBonus;
     }
 
+    heal(amount: number): number {
+        if (this.hp === this.maxHp) return 0;
+
+        const newHp = Math.min(this.maxHp, this.hp + amount);
+        const amountRecovered = newHp - this.hp;
+        this.hp = newHp;
+
+        return amountRecovered;
+    }
+
     takeDamage(damage: DamageInfo) {
         this.hp -= damage.amount;
 

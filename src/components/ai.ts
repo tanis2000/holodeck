@@ -1,7 +1,7 @@
 import * as ROT from 'rot-js'
 import { Actor, Entity } from "../entity";
 import { GameMap } from "../game-map";
-import { AlarmAction, WaitAction } from '../actions';
+import { AlarmAction, MeleeAction, MovementAction, WaitAction } from '../actions';
 
 export abstract class BaseAI {
     path: [number, number][]
@@ -45,6 +45,37 @@ export class TurretAI extends BaseAI {
             if (distance < this.alarmRange) {
                 return new AlarmAction().perform(entity as Actor, gameMap);
             }
+        }
+
+        return new WaitAction().perform(entity);
+    }
+}
+
+export class HostileAI extends BaseAI {
+    constructor() {
+        super();
+    }
+
+    perform(entity: Entity, gameMap: GameMap) {
+        const target = window.engine.player!;
+        const dx = target.x - entity.x;
+        const dy = target.y - entity.y;
+        const distance = Math.max(Math.abs(dx), Math.abs(dy));
+
+        if (gameMap.tileIsVisible(entity.x, entity.y)) {
+            if (distance <= 1) {
+                return new MeleeAction(dx, dy).perform(entity as Actor, gameMap);
+            }
+            this.calculatePathTo(target.x, target.y, entity, gameMap);
+        }
+
+        if (this.path.length > 0) {
+            const [destX, destY] = this.path[0];
+            this.path.shift();
+            return new MovementAction(destX - entity.x, destY - entity.y).perform(
+                entity,
+                gameMap,
+            );
         }
 
         return new WaitAction().perform(entity);

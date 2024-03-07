@@ -3,6 +3,7 @@ import { DamageType } from "./damage-types";
 import { Entity, Actor, Item } from "./entity";
 import { ImpossibleException } from "./exceptions";
 import { GameMap } from "./game-map";
+import { generateRandomNumber } from "./rng";
 import { GameScreen } from "./screens/game-screen";
 
 export abstract class Action {
@@ -45,7 +46,12 @@ export class MeleeAction extends ActionWithDirection {
             throw new ImpossibleException('Nothing to hack.')
         }
 
-        const damage = actor.fighter.power - target.fighter.defense
+        let roll = generateRandomNumber(0, actor.fighter.power)
+        let damage = Math.max(0, roll - target.fighter.defense)
+        if (roll == actor.fighter.power) {
+            // critical hits always hit
+            damage = Math.max(1, roll - target.fighter.defense)
+        }
         let attackDescription = ``
         let damageType = DamageType.Software
         if (actor.equipment.powerBonus == 0) {
@@ -145,6 +151,7 @@ export class DisconnectAction extends Action {
     }
 
     perform(_entity: Entity, _gameMap: GameMap): void {
+        window.messageLog.addMessage(`You disconnect and connect to a new network`);
         (window.engine.screen as GameScreen).reset()
     }
 }

@@ -131,7 +131,7 @@ export class InventoryInputHandler extends BaseInputHandler {
         const itemCount = window.engine.player!.inventory.items.length;
         const height = itemCount + 2 <= 3 ? 3 : itemCount + 2;
         const width = title.length + 45;
-        const x = window.engine.player!.x <= 30 ? 40 : 0;
+        const x = 0;
         const y = 0;
 
         renderFrameWithTitle(x, y, width, height, title);
@@ -423,6 +423,28 @@ type ActionCallback = (x: number, y: number) => Action | null;
 export class SingleRangedAttackHandler extends SelectIndexHandler {
     constructor(public callback: ActionCallback) {
         super();
+    }
+
+    onIndexSelected(x: number, y: number): Action | null {
+        this.nextHandler = new GameInputHandler();
+        return this.callback(x, y);
+    }
+}
+
+export class AreaRangedAttackHandler extends SelectIndexHandler {
+    constructor(public radius: number, public callback: ActionCallback) {
+        super();
+    }
+
+    onRender(display: Display) {
+        const startX = this.mousePosition[0] - this.radius - 1;
+        const startY = this.mousePosition[1] - this.radius - 1;
+
+        for (let x = startX; x < startX + this.radius ** 2; x++) {
+            for (let y = startY; y < startY + this.radius ** 2; y++) {
+                display.drawOver(x, y, null, '#fff', '#f00');
+            }
+        }
     }
 
     onIndexSelected(x: number, y: number): Action | null {

@@ -31,4 +31,5 @@ export enum Colors {
     InvalidText = '#f62d2d',
     NeedTargetText = '#dadada7c',
     StatusEffectAppliedText = '#e4c826',
+    HealthRecoveredText = '#78cc18',
 }
