@@ -5,6 +5,7 @@ import { Colors } from './colors';
 import { renderFrameWithTitle } from './render-functions';
 import { Engine } from './engine';
 import { equipmentTypeToString } from './equipment-types';
+import { GameScreen } from './screens/game-screen';
 
 interface LogMap {
     [key: string]: number;
@@ -450,5 +451,62 @@ export class AreaRangedAttackHandler extends SelectIndexHandler {
     onIndexSelected(x: number, y: number): Action | null {
         this.nextHandler = new GameInputHandler();
         return this.callback(x, y);
+    }
+}
+
+export class MainMenuInputHandler extends BaseInputHandler {
+    constructor(public display: Display) {
+        super();
+    }
+
+    handleKeyboardInput(event: KeyboardEvent): Action | null {
+        if (event.key == 'n') {
+            if (window.engine.playerInfo.name == '') {
+                this.nextHandler = new ChangeNameInputHandler(this.display)
+                return null;
+            } else {
+                window.engine.nextScreen(new GameScreen(this.display))
+                return null;
+            }
+        }
+
+        return null;
+    }
+}
+
+export class ChangeNameInputHandler extends BaseInputHandler {
+    MAX_LENGTH = 24
+
+    constructor(public display:Display) {
+        super();
+    }
+
+    onRender(display: Display) {
+        const x = 0;
+        const y = 0;
+        const title = 'Character name';
+        const width = title.length + this.MAX_LENGTH;
+
+        renderFrameWithTitle(x, y, width, 7, title);
+
+        display.drawText(
+            x + 1,
+            y + 1,
+            `Name: ${window.engine.playerInfo.name}`,
+        );
+    }
+
+    handleKeyboardInput(event: KeyboardEvent): Action | null {
+        if (event.key == 'Enter') {
+            this.nextHandler = new MainMenuInputHandler(this.display);
+        } else if ((event.key >= 'a' && event.key <= 'z') || (event.key >= 'A' && event.key <= 'Z') || (event.key >= '0' && event.key <= '9') || event.key == '-' || event.key == '_' || event.key == '|' || event.key == '*' || event.key == '!') {
+            if (window.engine.playerInfo.name.length < this.MAX_LENGTH)
+            window.engine.playerInfo.setName(window.engine.playerInfo.name + event.key)
+        } else if (event.key == 'Backspace') {
+            if (window.engine.playerInfo.name.length > 0) {
+                window.engine.playerInfo.setName(window.engine.playerInfo.name.slice(0, window.engine.playerInfo.name.length-1))
+            }
+        }
+        return null;
     }
 }

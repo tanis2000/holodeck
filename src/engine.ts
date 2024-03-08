@@ -2,6 +2,8 @@ import * as rot from 'rot-js'
 import { BaseScreen } from './screens/base-screen'
 import { MainMenu } from './screens/main-menu'
 import { Actor } from './entity'
+import { PlayerInfo } from './player-info'
+import { SaveGame } from './save-game'
 
 export class Engine {
     public static readonly WIDTH = 80
@@ -12,6 +14,7 @@ export class Engine {
     display: rot.Display
     screen: BaseScreen
     player: Actor | null = null
+    playerInfo: PlayerInfo = new PlayerInfo()
 
     constructor() {
         this.display = new rot.Display({
@@ -22,6 +25,9 @@ export class Engine {
 
         const container = this.display.getContainer()!
         document.body.appendChild(container)
+
+        const saveGame = SaveGame.load()
+        this.playerInfo.setName(saveGame.playerInfo.name)
 
         this.screen = new MainMenu(this.display)
 

@@ -97,9 +97,18 @@ export class Fighter extends BaseComponent {
         }
 
         if (window.engine.player === this.parent) {
+            // This is the player that died
+            this.postScore()
             window.engine.nextScreen(new MainMenu(window.engine.display))
         } else {
             window.engine.player?.level.addXp(this.parent.level.xpGiven)
         }
+    }
+
+    async postScore() {
+        await fetch(`https://podium.altralogica.it/l/holodeck/members/${window.engine.playerInfo.name}/score`, {
+            method: 'PUT',
+            body: `{"score":${this.parent!.level.currentLevel}}`
+        })
     }
 }
